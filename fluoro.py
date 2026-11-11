@@ -195,26 +195,44 @@ def error_metrics(errors: list[float]) -> dict[str, float] | None:
     }
 
 
-def benchmark(measurements: list[Measurement], seed: int) -> tuple[dict, list[dict]]:
-    train, test = split_by_structure(measurements, seed)
-    model = AnalogModel(train)
+def benchmark(measurements: list[Measurement], seed: int, leave_one_out: bool = False
+              ) -> tuple[dict, list[dict]]:
+    by_structure: dict[str, list[Measurement]] = defaultdict(list)
+    for item in measurements:
+        by_structure[item.smiles].append(item)
+    if leave_one_out:
+        if len(by_structure) < 2:
+            raise ValueError("Leave-one-out requires at least 2 distinct canonical SMILES")
+        folds = (([item for item in measurements if item.smiles != smiles], items)
+                 for smiles, items in by_structure.items())
+    else:
+        folds = iter([split_by_structure(measurements, seed)])
+
     rows = []
-    for item in test:
-        result = model.predict(item.smiles, item.solvent)
-        rows.append({
-            **asdict(item),
-            "prediction_nm": result["prediction_nm"],
-            "error_nm": result["prediction_nm"] - item.emission_nm,
-            "baseline_nm": model.median,
-            "low_similarity": result["low_similarity"],
-        })
-    report = {
+    for train, test in folds:
+        model = AnalogModel(train)
+        for item in test:
+            result = model.predict(item.smiles, item.solvent)
+            rows.append({
+                **asdict(item),
+                "prediction_nm": result["prediction_nm"],
+                "error_nm": result["prediction_nm"] - item.emission_nm,
+                "baseline_nm": model.median,
+                "low_similarity": result["low_similarity"],
+            })
+    partition = {
+        "split": "leave-one-canonical-SMILES-out",
+        "folds": len(by_structure),
+    } if leave_one_out else {
         "split": "20% held-out canonical SMILES",
         "seed": seed,
         "train_pairs": len(train),
-        "test_pairs": len(test),
         "train_structures": len({item.smiles for item in train}),
-        "test_structures": len({item.smiles for item in test}),
+    }
+    report = {
+        **partition,
+        "test_pairs": len(rows),
+        "test_structures": len({row["smiles"] for row in rows}),
         "training_median": error_metrics([row["baseline_nm"] - row["emission_nm"] for row in rows]),
         "solvent_aware_knn": error_metrics([row["error_nm"] for row in rows]),
         "low_similarity_pairs": sum(row["low_similarity"] for row in rows),
@@ -233,6 +251,8 @@ def main(argv: list[str] | None = None) -> int:
     for command in (inspect, evaluate, predict):
         command.add_argument("csv", type=Path)
     evaluate.add_argument("--seed", default=42, type=int)
+    evaluate.add_argument("--leave-one-out", action="store_true",
+                          help="Hold out each structure once (for small datasets)")
     evaluate.add_argument("--predictions", type=Path, help="Optional per-row output CSV")
     predict.add_argument("--smiles", required=True)
     predict.add_argument("--solvent", required=True)
@@ -245,7 +265,7 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "benchmark":
             if args.predictions and args.predictions.resolve() == args.csv.resolve():
                 raise ValueError("Prediction output must differ from the input file")
-            report, rows = benchmark(measurements, args.seed)
+            report, rows = benchmark(measurements, args.seed, args.leave_one_out)
             result = {"cleaning": cleaning, **report}
             if args.predictions:
                 with args.predictions.open("w", encoding="utf-8", newline="") as stream:

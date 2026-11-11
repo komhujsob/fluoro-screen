@@ -54,6 +54,18 @@ class FluoroTests(unittest.TestCase):
         mae = sum(abs(row["error_nm"]) for row in predictions) / len(predictions)
         self.assertAlmostEqual(report["solvent_aware_knn"]["mae_nm"], mae)
 
+    def test_leave_one_out_excludes_all_measurements_of_the_held_out_structure(self):
+        rows = [
+            Measurement("CCO", "water", 100),
+            Measurement("CCO", "ethanol", 200),
+            Measurement("CCC", "water", 500),
+        ]
+        report, predictions = benchmark(rows, 42, leave_one_out=True)
+        self.assertEqual(report["folds"], 2)
+        self.assertEqual(report["test_pairs"], 3)
+        for row in predictions:
+            self.assertEqual(row["baseline_nm"], 500 if row["smiles"] == "CCO" else 150)
+
     def test_benchmark_cli_writes_csv_and_protects_input(self):
         command = [sys.executable, str(ROOT / "fluoro.py"), "benchmark", str(EXAMPLE)]
         with tempfile.TemporaryDirectory() as directory:

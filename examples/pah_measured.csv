@@ -1,0 +1,8 @@
+name,smiles,solvent,emission_nm,pubchem_cid,source
+Tetracene,C1=CC=C2C=C3C=C4C=CC=CC4=CC3=CC2=C1,methanol/water 1:1,473,7080,https://www.tmiph.metro.tokyo.lg.jp/files/archive/issue/kenkyunenpo/ar-28-1.pdf
+Anthracene,C1=CC=C2C=C3C=CC=CC3=CC2=C1,methanol/water 1:1,399,8418,https://www.tmiph.metro.tokyo.lg.jp/files/archive/issue/kenkyunenpo/ar-28-1.pdf
+Triphenylene,C1=CC=C2C(=C1)C3=CC=CC=C3C4=CC=CC=C24,methanol/water 1:1,352,9170,https://www.tmiph.metro.tokyo.lg.jp/files/archive/issue/kenkyunenpo/ar-28-1.pdf
+Pyrene,C1=CC2=C3C(=C1)C=CC4=CC=CC(=C43)C=C2,methanol/water 1:1,373,31423,https://www.tmiph.metro.tokyo.lg.jp/files/archive/issue/kenkyunenpo/ar-28-1.pdf
+Benz[a]anthracene,C1=CC=C2C(=C1)C=CC3=CC4=CC=CC=C4C=C32,methanol/water 1:1,387,5954,https://www.tmiph.metro.tokyo.lg.jp/files/archive/issue/kenkyunenpo/ar-28-1.pdf
+Benzo[a]pyrene,C1=CC=C2C3=C4C(=CC2=C1)C=CC5=C4C(=CC=C5)C=C3,methanol/water 1:1,405,2336,https://www.tmiph.metro.tokyo.lg.jp/files/archive/issue/kenkyunenpo/ar-28-1.pdf
+"Dibenz[a,h]anthracene",C1=CC=C2C(=C1)C=CC3=CC4=C(C=CC5=CC=CC=C54)C=C32,methanol/water 1:1,394,5889,https://www.tmiph.metro.tokyo.lg.jp/files/archive/issue/kenkyunenpo/ar-28-1.pdf
